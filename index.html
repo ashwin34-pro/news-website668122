@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily News Website</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .news-content {
+            padding: 1.5rem;
+        }
+
+        .news-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .news-description {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .news-source {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .news-date {
+            color: #888;
+        }
+
+        .read-more {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+
+        .read-more:hover {
+            transform: scale(1.05);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Daily News Hub</h1>
+            <p class="subtitle">Stay updated with the latest news from around the world</p>
+        </header>
+
+        <div id="loading" class="loading">
+            <p>Loading latest news...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>Sorry, we couldn't load the news right now. Please try again later.</p>
+        </div>
+
+        <div id="news-container" class="news-grid">
+            <!-- News articles will be dynamically loaded here -->
+        </div>
+
+        <footer>
+            <p>&copy; 2025 Daily News Hub. Powered by GNews API</p>
+        </footer>
+    </div>
+
+    <script>
+        // GNews API configuration
+        const API_KEY = 'b39c69c0d7ecea3b12b3043da5b7e89d'; // Demo API key
+        const API_URL = `https://gnews.io/api/v4/top-headlines?category=general&lang=en&country=us&max=10&apikey=${API_KEY}`;
+
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Function to create news card HTML
+        function createNewsCard(article) {
+            return `
+                <article class="news-card">
+                    <img src="${article.image || 'https://via.placeholder.com/400x200?text=No+Image'}" 
+                         alt="${article.title}" 
+                         class="news-image" 
+                         onerror="this.src='https://via.placeholder.com/400x200?text=No+Image'">
+                    <div class="news-content">
+                        <div class="news-meta">
+                            <span class="news-source">${article.source.name}</span>
+                            <span class="news-date">${formatDate(article.publishedAt)}</span>
+                        </div>
+                        <h2 class="news-title">${article.title}</h2>
+                        <p class="news-description">${article.description || 'No description available.'}</p>
+                        <a href="${article.url}" target="_blank" class="read-more">Read Full Article</a>
+                    </div>
+                </article>
+            `;
+        }
+
+        // Function to fetch and display news
+        async function fetchNews() {
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            const newsContainer = document.getElementById('news-container');
+
+            try {
+                loadingElement.style.display = 'block';
+                errorElement.style.display = 'none';
+
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.articles && data.articles.length > 0) {
+                    const newsHTML = data.articles.map(article => createNewsCard(article)).join('');
+                    newsContainer.innerHTML = newsHTML;
+                } else {
+                    throw new Error('No articles found');
+                }
+
+                loadingElement.style.display = 'none';
+            } catch (error) {
+                console.error('Error fetching news:', error);
+                loadingElement.style.display = 'none';
+                errorElement.style.display = 'block';
+                
+                // Display sample news articles as fallback
+                displaySampleNews();
+            }
+        }
+
+        // Function to display sample news (fallback)
+        function displaySampleNews() {
+            const newsContainer = document.getElementById('news-container');
+            const sampleNews = [
+                {
+                    title: "Breaking: Major Technology Breakthrough Announced",
+                    description: "Scientists have announced a revolutionary breakthrough in quantum computing that could change the future of technology.",
+                    image: "https://via.placeholder.com/400x200?text=Tech+News",
+                    source: { name: "Tech Today" },
+                    publishedAt: new Date().toISOString(),
+                    url: "#"
+                },
+                {
+                    title: "Global Climate Summit Reaches Historic Agreement",
+                    description: "World leaders have reached a consensus on new climate action policies at the international summit.",
+                    image: "https://via.placeholder.com/400x200?text=Climate+News",
+                    source: { name: "Global News" },
+                    publishedAt: new Date().toISOString(),
+                    url: "#"
+                },
+                {
+                    title: "Economic Markets Show Strong Recovery",
+                    description: "Financial markets are showing positive trends as economic indicators point to sustained growth.",
+                    image: "https://via.placeholder.com/400x200?text=Business+News",
+                    source: { name: "Business Wire" },
+                    publishedAt: new Date().toISOString(),
+                    url: "#"
+                }
+            ];
+
+            const newsHTML = sampleNews.map(article => createNewsCard(article)).join('');
+            newsContainer.innerHTML = newsHTML;
+            
+            // Hide error message when showing sample news
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', fetchNews);
+    </script>
+</body>
+</html>
